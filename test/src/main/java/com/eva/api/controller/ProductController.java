@@ -7,6 +7,7 @@ import com.eva.api.dto.response.ProductResponse;
 import com.eva.domain.Product;
 import com.eva.exception.NotFoundException;
 import com.eva.exception.NotValidFilter;
+import com.eva.repository.ProductRepository;
 import com.eva.service.ProductService;
 import jakarta.validation.Valid;
 import java.io.UnsupportedEncodingException;
@@ -16,7 +17,12 @@ import java.util.List;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Controller
+@Slf4j
 @RestController
 @RequestMapping("/shop")
 @RequiredArgsConstructor
@@ -56,17 +63,31 @@ public class ProductController {
 
   @GetMapping("/product")
   public List<ProductResponse> getAllByFilter(@Valid @RequestParam String filter) {
-    try {
+    log.info("Request received");
       String regex = decode(filter);
-      return productService.findAll().stream()
+    List<ProductResponse> products = productService.findAll().stream()
+        .filter(product -> !(Pattern.matches(regex.toLowerCase(), product.getName().toLowerCase())))
+        .map(ProductResponse::fromEntity)
+        .toList();
+    log.info("Finish execution");
+      return products;
+  }
+
+  @GetMapping("/product/peagable/{page}")
+  public List<ProductResponse> getAllPage(@Valid @RequestParam String filter, @PathVariable Long page) {
+    log.info("Request received");
+      String regex = decode(filter);
+      List<ProductResponse> products = productService.findAll().stream()
           .filter(product -> !(Pattern.matches(regex.toLowerCase(), product.getName().toLowerCase())))
           .map(ProductResponse::fromEntity)
+          .skip((page -1) * 100)
+          .limit(100)
           .toList();
-    } catch (UnsupportedEncodingException e) {
-      throw new NotValidFilter(filter);
-    }
+    log.info("Finish execution");
+    return products;
   }
-  private String decode(String value) throws UnsupportedEncodingException {
+
+  private String decode(String value){
     return URLDecoder.decode(value, StandardCharsets.UTF_8);
   }
 

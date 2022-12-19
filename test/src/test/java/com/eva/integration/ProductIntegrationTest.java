@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.eva.domain.Product;
 import com.eva.domain.ProductFixture;
 import com.eva.repository.ProductRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -76,10 +74,10 @@ public class ProductIntegrationTest {
   public void givenListOfProducts_whenGetByFilter_thenReturnProducts() throws Exception{
     List<Product> products = new ArrayList<>();
 
-    for(long i = 0; i < 10000; i++) {
+    for(long i = 0; i < 1000; i++) {
       products.add(ProductFixture.createProduct("product", i));
     }
-    for(long i = 0; i < 10000; i++) {
+    for(long i = 0; i < 1000; i++) {
       products.add(ProductFixture.createProduct("roduct", i));
     }
 
@@ -90,7 +88,7 @@ public class ProductIntegrationTest {
 
     response.andExpect(status().isOk())
         .andDo(print())
-        .andExpect(jsonPath("$.size()", is(10000)));
+        .andExpect(jsonPath("$.size()", is(1000)));
   }
 
 }
